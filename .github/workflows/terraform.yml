@@ -1,0 +1,54 @@
+name: Terraform
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout the code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Set up Terraform
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: "1.5.0"
+
+    # Set up AWS credentials to interact with the AWS environment
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-west-2
+
+    # Terraform Initialization
+    - name: Terraform Init
+      run: terraform init
+
+    # Terraform Plan step
+    - name: Terraform Plan
+      id: plan
+      run: terraform plan -out=tfplan
+
+    # Terraform Apply step
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      run: terraform apply -auto-approve tfplan
+
+    - name: Output Deploy URL
+      id: deploy
+      run: terraform apply -auto-approve tfplan
+    # Destroy step
+    
+    - name: Terraform Destroy
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      run: terraform destroy -auto-approve
