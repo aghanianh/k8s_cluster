@@ -34,15 +34,10 @@ jobs:
     - name: Terraform Init
       run: terraform init
 
-    # Terraform Plan step
-    - name: Terraform Plan
-      id: plan
-      run: terraform plan -out=tfplan
-
     # Terraform Apply step
     - name: Terraform Apply
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      run: terraform apply -auto-approve tfplan
+      run: terraform apply 
 
     - name: Terraform Destroy
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
